@@ -30,6 +30,28 @@ func IsSegment(line string) bool {
     return false
 }
 
+func (s *Segment) IsRam() bool {
+    if s.Type == "rw" {
+        return true
+    }
+    return false
+}
+
+// TODO: make this not hard coded
+func (s *Segment) PageID() int {
+    switch s.Id {
+        case 12:
+            return 0
+        case 13:
+            return 1
+        case 14:
+            return 2
+        case 15, 9:
+            return 3
+    }
+    return -1
+}
+
 // ParseSegment returns a *Segment given a line
 func ParseSegment(line string) (*Segment, error) {
     if len(line) < 4 || line[0:4] != "seg\t" {
