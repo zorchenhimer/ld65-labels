@@ -57,27 +57,7 @@ func main() {
         }
     }
 
-    dbgSegments, err := os.Create("segments.dbg.txt")
-    if err != nil {
-        fmt.Printf("Unable to create segments.dbg.txt: %s\n", err)
-        os.Exit(1)
-    }
-    defer dbgSegments.Close()
 
-    dbgSymbols, err := os.Create("symbols.dbg.txt")
-    if err != nil {
-        fmt.Printf("Unable to create symbols.dbg.txt: %s\n", err)
-        os.Exit(1)
-    }
-    defer dbgSymbols.Close()
-
-    for _, s := range segments {
-        fmt.Fprintln(dbgSegments, s.String())
-    }
-
-    for _, s := range symbols {
-        fmt.Fprintln(dbgSymbols, s.String())
-    }
 
     // Create the .mlb output file for Mesen
     // TODO: output FCEUX's format too
