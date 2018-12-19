@@ -1,3 +1,5 @@
+*.db
 *.exe
 *.mlb
+*.nl
 *.txt
