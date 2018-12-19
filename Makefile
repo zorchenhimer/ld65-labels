@@ -6,4 +6,4 @@ all: $(SRC)
 	go build
 
 clean:
-	-rm ld65-labels.exe ld65-labels
+	-rm ld65-labels.exe ld65-labels *.nl *.mlb
