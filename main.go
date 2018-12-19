@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "fmt"
     "os"
+    "sort"
     "strings"
 )
 
@@ -33,6 +34,8 @@ func main() {
     lines := strings.Split(strings.Replace(string(file), "\r", "",  -1), "\n")
     segments := []*Segment{}
     symbols := []*Symbol{}
+    segmentMap := make(map[int]*Segment)
+    segmentTree := make(map[int][]*Symbol)
 
     // Read input file and parse all segments and symbols
     for _, line := range lines {
@@ -47,6 +50,7 @@ func main() {
                 fmt.Println(err)
             }
             segments = append(segments, seg)
+            segmentMap[seg.Id] = seg
 
         } else if IsSymbol(line) {
             sym, err := ParseSymbol(line)
@@ -54,10 +58,30 @@ func main() {
                 fmt.Println(err)
             }
             symbols = append(symbols, sym)
+            segmentTree[sym.Segment] = append(segmentTree[sym.Segment], sym)
         }
     }
 
+    for seg, syms := range segmentTree {
+        if segment, ok := segmentMap[seg]; ok {
+            if segment.Type != "ro" {  // Don't bother with non-labels
+                continue;
+            }
+        } else {    // Or with things that don't have a segment (eg, id -1)
+            fmt.Printf("Unable to find segment in map: %d\n", seg)
+            continue;
+        }
 
+        sort.Sort(SymbolSlice(syms))
+        parent := ""
+        for _, sym := range syms {
+            if (sym.Name[0] != '@') {
+                parent = sym.Name
+            } else {
+                sym.Parent = parent
+            }
+        }
+    }
 
     // Create the .mlb output file for Mesen
     // TODO: output FCEUX's format too
@@ -149,7 +173,7 @@ func main() {
         }
 
         // Type (PRG/RAM), Address (loaded into CPU space), Name
-        fmt.Fprintf(outfile, "%s:%04X:%s\n", t, abs, sym.Name)
+        fmt.Fprintf(outfile, "%s:%04X:%s%s\n", t, abs, sym.Parent, sym.Name)
 
         // FCEUX stuff
         var fceuxFile *os.File

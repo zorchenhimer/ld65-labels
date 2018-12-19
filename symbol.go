@@ -10,7 +10,7 @@ type Symbol struct {
     Id          int     // unique label ID
     Name        string  // Label
     AddrSize    string  // absolute, zeropage, etc
-    Parent      int     // ?
+    Parent      string  // Parent label name. blank if non-local label
     Defined     []int   // "def"
     References  []int   // "ref"
     Value       int     // Address of label
@@ -32,8 +32,8 @@ func (s *Symbol) String() string {
         }
     }
 
-    return fmt.Sprintf("[%d] %s AddrSize:%s Defined:%s References:%s Value:$%X Segment:%d",
-        s.Id, s.Name, s.AddrSize, d, r, s.Value, s.Segment)
+    return fmt.Sprintf("[%d] %s Parent:%s AddrSize:%s Defined:%s References:%s Value:$%X Segment:%d",
+        s.Id, s.Name, s.Parent, s.AddrSize, d, r, s.Value, s.Segment)
 }
 
 // IsSymbol returns true if the given line describes a symbol (Label)
@@ -114,3 +114,9 @@ func ParseSymbol(line string) (*Symbol, error) {
 
     return sym, nil
 }
+
+type SymbolSlice []*Symbol
+
+func (ss SymbolSlice) Len() int { return len(ss) }
+func (ss SymbolSlice) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
+func (ss SymbolSlice) Less(i, j int) bool { return ss[i].Value < ss[j].Value }
