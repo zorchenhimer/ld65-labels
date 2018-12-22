@@ -30,4 +30,4 @@ R:0002:CONTROLLER2
 ## //TODO
 
 - I haven't extensively tested this.  So far, I know it works for the specific MMC1 iNES configuration that I'm using.
-- FCEUX output file
+- Test the FCEUX output with more than the specific iNES configuration that I've used.

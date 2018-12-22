@@ -65,11 +65,13 @@ func main() {
     for seg, syms := range segmentTree {
         if segment, ok := segmentMap[seg]; ok {
             if segment.Type != "ro" {  // Don't bother with non-labels
-                continue;
+                continue
             }
-        } else {    // Or with things that don't have a segment (eg, id -1)
+        } else if (seg == -1) { // Or with things that don't have a segment (eg, id -1)
+            continue
+        } else {
             fmt.Printf("Unable to find segment in map: %d\n", seg)
-            continue;
+            continue
         }
 
         sort.Sort(SymbolSlice(syms))
@@ -83,8 +85,28 @@ func main() {
         }
     }
 
+    if dbgSeg, err := os.Create("segments.dbg.txt"); err == nil {
+        for _, seg := range segments {
+            fmt.Fprintln(dbgSeg, seg)
+        }
+        dbgSeg.Close()
+    }
+
+    if dbgSym, err := os.Create("symbols.dbg.txt"); err == nil {
+        for _, sym := range symbols {
+            fmt.Fprintln(dbgSym, sym)
+        }
+        dbgSym.Close()
+    }
+
+    if dbgMap, err := os.Create("map.dbg.txt"); err == nil {
+        for key, _ := range segmentMap {
+            fmt.Fprintf(dbgMap, "Key:%q\n", key)
+        }
+        dbgMap.Close()
+    }
+
     // Create the .mlb output file for Mesen
-    // TODO: output FCEUX's format too
     outfile, err := os.Create(strings.Replace(inputname, ".nes.db", ".mlb", -1))
     if err != nil {
         fmt.Println(err)
@@ -92,41 +114,14 @@ func main() {
     }
     defer outfile.Close()
 
-    fceuxRam, err := os.Create(strings.Replace(inputname, ".db", ".ram.nl", -1))
+    // Init the FCEUX helper class.  This holds references to a bunch of
+    // files that are created on demand for each page.
+    fceux, err := NewFceux(inputname)
     if err != nil {
-        fmt.Printf("Unable to create .ram.nl file: %s\n", err)
+        fmt.Printf("Unable to init FCEUX helper: %s\n", err)
         os.Exit(1)
     }
-    defer fceuxRam.Close()
-
-    // TODO: create these on demand? make them less hard-coded
-    fceuxP0, err := os.Create(strings.Replace(inputname, ".db", ".0.nl", -1))
-    if err != nil {
-        fmt.Printf("Unable to create .0.nl file: %s\n", err)
-        os.Exit(1)
-    }
-    defer fceuxP0.Close()
-
-    fceuxP1, err := os.Create(strings.Replace(inputname, ".db", ".1.nl", -1))
-    if err != nil {
-        fmt.Printf("Unable to create .1.nl file: %s\n", err)
-        os.Exit(1)
-    }
-    defer fceuxP1.Close()
-
-    fceuxP2, err := os.Create(strings.Replace(inputname, ".db", ".2.nl", -1))
-    if err != nil {
-        fmt.Printf("Unable to create .2.nl file: %s\n", err)
-        os.Exit(1)
-    }
-    defer fceuxP2.Close()
-
-    fceuxP3, err := os.Create(strings.Replace(inputname, ".db", ".3.nl", -1))
-    if err != nil {
-        fmt.Printf("Unable to create .3.nl file: %s\n", err)
-        os.Exit(1)
-    }
-    defer fceuxP3.Close()
+    defer fceux.Close()
 
     count := 0  // Just used to show the user at the end
     for _, sym := range symbols {
@@ -176,25 +171,7 @@ func main() {
         fmt.Fprintf(outfile, "%s:%04X:%s%s\n", t, abs, sym.Parent, sym.Name)
 
         // FCEUX stuff
-        var fceuxFile *os.File
-        if seg.IsRam() {
-            fceuxFile = fceuxRam
-        } else {
-            switch seg.PageID() {
-                case 0:
-                    fceuxFile = fceuxP0
-                case 1:
-                    fceuxFile = fceuxP1
-                case 2:
-                    fceuxFile = fceuxP2
-                case 3:
-                    fceuxFile = fceuxP3
-                default:
-                    panic("invalid page")
-            }
-        }
-        fmt.Fprintf(fceuxFile, "$%04X#%s#\n", sym.Value, sym.Name)
-
+        fceux.Write(sym, seg)
         count += 1
     }
 
