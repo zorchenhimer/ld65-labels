@@ -85,26 +85,6 @@ func main() {
         }
     }
 
-    if dbgSeg, err := os.Create("segments.dbg.txt"); err == nil {
-        for _, seg := range segments {
-            fmt.Fprintln(dbgSeg, seg)
-        }
-        dbgSeg.Close()
-    }
-
-    if dbgSym, err := os.Create("symbols.dbg.txt"); err == nil {
-        for _, sym := range symbols {
-            fmt.Fprintln(dbgSym, sym)
-        }
-        dbgSym.Close()
-    }
-
-    if dbgMap, err := os.Create("map.dbg.txt"); err == nil {
-        for key, _ := range segmentMap {
-            fmt.Fprintf(dbgMap, "Key:%q\n", key)
-        }
-        dbgMap.Close()
-    }
 
     // Create the .mlb output file for Mesen
     outfile, err := os.Create(strings.Replace(inputname, ".nes.db", ".mlb", -1))
