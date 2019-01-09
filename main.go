@@ -148,7 +148,10 @@ func main() {
 
         t := "P"
         // Variable addresses don't need to be adjusted.
-        if len(seg.OutputFile) == 0 {
+        if sym.Value >= 0x6000 && sym.Value < 0x8000 {
+            t = "S"
+            abs = sym.Value - 0x6000
+        } else if len(seg.OutputFile) == 0 {
             t = "R"
         } else {
             // minus start of PRG, minus iNES header, plus output file offset
